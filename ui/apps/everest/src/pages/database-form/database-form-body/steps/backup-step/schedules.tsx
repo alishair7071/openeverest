@@ -86,7 +86,10 @@ export const Schedules = ({ backupStorages }: Props) => {
   );
 
   useEffect(() => {
-    if (isSuccess && selectedClassName !== (backupClass?.metadata?.name ?? '')) {
+    if (
+      isSuccess &&
+      selectedClassName !== (backupClass?.metadata?.name ?? '')
+    ) {
       setValue(BACKUP_CLASS_REF_FIELD, backupClass?.metadata?.name ?? '');
     }
   }, [backupClass, isSuccess, selectedClassName, setValue]);

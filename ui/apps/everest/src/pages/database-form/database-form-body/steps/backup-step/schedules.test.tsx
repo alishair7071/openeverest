@@ -15,7 +15,7 @@
 import { useContext } from 'react';
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { DbWizardFormFields } from 'consts.ts';
 import { ScheduleFormDialogContext } from 'components/schedule-form-dialog/schedule-form-dialog-context/schedule-form-dialog.context';
 import type { BackupClass } from 'shared-types/backups.types';
@@ -105,10 +105,7 @@ const Harness = () => {
       backup: { classRef: { name: 'psmdb-class' }, schedules: [] },
     },
   });
-  const selectedClass = useWatch({
-    control: methods.control,
-    name: 'backup.classRef.name',
-  });
+  const selectedClass = methods.watch('backup.classRef.name');
 
   return (
     <FormProvider {...methods}>
@@ -135,7 +132,9 @@ it('shows only provider-managed classes for the selected provider', async () => 
     expect(screen.getByTestId('selected-class')).toHaveTextContent('pxc-class')
   );
   fireEvent.click(screen.getByTestId('create-schedule'));
-  expect(screen.getByTestId('available-classes')).toHaveTextContent('pxc-class');
+  expect(screen.getByTestId('available-classes')).toHaveTextContent(
+    'pxc-class'
+  );
   expect(screen.getByTestId('available-classes')).not.toHaveTextContent(
     'psmdb-class'
   );
