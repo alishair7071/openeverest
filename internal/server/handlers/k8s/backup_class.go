@@ -25,8 +25,33 @@ import (
 )
 
 // ListBackupClasses returns list of backup classes.
-func (h *k8sHandler) ListBackupClasses(ctx context.Context, cluster string) (*backupv1alpha1.BackupClassList, error) {
-	return h.kubeConnector.ListBackupClasses(ctx)
+func (h *k8sHandler) ListBackupClasses(ctx context.Context, cluster string, provider *string) (*backupv1alpha1.BackupClassList, error) {
+	list, err := h.kubeConnector.ListBackupClasses(ctx)
+	if err != nil || provider == nil {
+		return list, err
+	}
+
+	list.Items = filterBackupClassesByProvider(list.Items, *provider)
+	return list, nil
+}
+
+func filterBackupClassesByProvider(
+	backupClasses []backupv1alpha1.BackupClass,
+	provider string,
+) []backupv1alpha1.BackupClass {
+	filtered := make([]backupv1alpha1.BackupClass, 0, len(backupClasses))
+	for _, backupClass := range backupClasses {
+		if backupClass.Spec.ExecutionMode != backupv1alpha1.BackupExecutionModeProviderManaged {
+			continue
+		}
+		for _, supportedProvider := range backupClass.Spec.SupportedProviders {
+			if supportedProvider == provider {
+				filtered = append(filtered, backupClass)
+				break
+			}
+		}
+	}
+	return filtered
 }
 
 // GetBackupClass returns backup class that matches the criteria.

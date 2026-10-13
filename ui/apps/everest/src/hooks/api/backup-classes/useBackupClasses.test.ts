@@ -14,7 +14,11 @@
 
 import { renderHook } from '@testing-library/react';
 import { BackupClass } from 'shared-types/backups.types';
-import { useBackupClassUiSchema } from './useBackupClasses';
+import {
+  getBackupClassesQueryKey,
+  getFilteredBackupClassesQueryKey,
+  useBackupClassUiSchema,
+} from './useBackupClasses';
 
 const classWithUiSchema = (uiSchema: unknown): BackupClass =>
   ({ spec: { uiSchema } }) as unknown as BackupClass;
@@ -57,5 +61,19 @@ describe('useBackupClassUiSchema', () => {
     );
 
     expect(result.current.sections).toBeUndefined();
+  });
+});
+
+describe('backup class query keys', () => {
+  it('separates provider-filtered results while preserving the unfiltered key', () => {
+    expect(getBackupClassesQueryKey('main')).toEqual([
+      'backup-classes',
+      'main',
+    ]);
+    expect(getFilteredBackupClassesQueryKey('main', 'pxc')).toEqual([
+      'backup-classes',
+      'main',
+      'pxc',
+    ]);
   });
 });

@@ -32,6 +32,11 @@ export const BACKUP_CLASSES_QUERY_KEY = 'backup-classes';
 export const getBackupClassesQueryKey = (clusterName: string) =>
   [BACKUP_CLASSES_QUERY_KEY, clusterName] as const;
 
+export const getFilteredBackupClassesQueryKey = (
+  clusterName: string,
+  provider?: string
+) => [BACKUP_CLASSES_QUERY_KEY, clusterName, provider] as const;
+
 export const getBackupClassQueryKey = (
   clusterName: string,
   backupClassName: string
@@ -39,6 +44,7 @@ export const getBackupClassQueryKey = (
 
 export const useBackupClassesList = (
   clusterName: string,
+  provider?: string,
   options?: PerconaQueryOptions<
     ListBackupClassesPayload,
     unknown,
@@ -48,8 +54,11 @@ export const useBackupClassesList = (
   const { canRead } = useRBACPermissions('backup-classes');
 
   return useQuery<ListBackupClassesPayload, unknown, BackupClass[]>({
-    queryKey: getBackupClassesQueryKey(clusterName),
-    queryFn: () => getBackupClassesListFn(clusterName),
+    queryKey:
+      provider !== undefined
+        ? getFilteredBackupClassesQueryKey(clusterName, provider)
+        : getBackupClassesQueryKey(clusterName),
+    queryFn: () => getBackupClassesListFn(clusterName, provider),
     select: canRead ? ({ items = [] }) => items : () => [],
     enabled: (options?.enabled ?? true) && canRead,
     ...options,

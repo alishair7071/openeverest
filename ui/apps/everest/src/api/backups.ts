@@ -75,9 +75,13 @@ export const getBackupsListFn = async (
   return response.data;
 };
 
-export const getBackupClassesListFn = async (clusterName: string) => {
+export const getBackupClassesListFn = async (
+  clusterName: string,
+  provider?: string
+) => {
   const response = await api.get<ListBackupClassesPayload>(
-    `clusters/${clusterName}/backup-classes`
+    `clusters/${clusterName}/backup-classes`,
+    { params: provider === undefined ? undefined : { provider } }
   );
 
   return response.data;
