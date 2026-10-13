@@ -130,7 +130,7 @@ func TestRBAC_BackupClass(t *testing.T) {
 					userGetter: testUserGetter,
 				}
 
-				list, err := h.ListBackupClasses(ctx, tc.cluster)
+				list, err := h.ListBackupClasses(ctx, tc.cluster, nil)
 				require.NoError(t, err)
 				assert.Condition(t, func() bool {
 					return tc.assert(list)

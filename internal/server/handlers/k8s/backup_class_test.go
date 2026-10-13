@@ -17,8 +17,9 @@ package k8s
 import (
 	"testing"
 
-	backupv1alpha1 "github.com/openeverest/openeverest/v2/api/backup/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	backupv1alpha1 "github.com/openeverest/openeverest/v2/api/backup/v1alpha1"
 )
 
 func TestFilterBackupClassesByProvider(t *testing.T) {

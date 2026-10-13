@@ -6580,7 +6580,10 @@ export interface operations {
     };
     listBackupClasses: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filter to ProviderManaged backup classes supporting this provider. */
+                provider?: string;
+            };
             header?: never;
             path: {
                 /** @description The name of the cluster */

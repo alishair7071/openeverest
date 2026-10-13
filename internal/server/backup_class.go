@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
 	"github.com/openeverest/openeverest/v2/internal/server/api"
 )
 

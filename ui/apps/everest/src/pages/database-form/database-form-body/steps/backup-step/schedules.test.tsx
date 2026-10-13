@@ -42,6 +42,12 @@ const backupClasses: BackupClass[] = [
   },
 ];
 const backupClassesResponse = { data: backupClasses, isSuccess: true };
+const providerBackupClassesResponses = new Map([
+  ['pxc', { data: [backupClasses[1]], isSuccess: true }],
+  ['psmdb', { data: [backupClasses[0]], isSuccess: true }],
+  ['unknown', { data: [], isSuccess: true }],
+]);
+const emptyBackupClassesResponse = { data: [], isSuccess: true };
 
 vi.mock('hooks/api/useClusterName', () => ({
   useClusterName: () => 'main',
@@ -50,7 +56,11 @@ vi.mock('pages/database-form/hooks/use-database-page-mode', () => ({
   useDatabasePageMode: () => 'new',
 }));
 vi.mock('hooks/api/backup-classes/useBackupClasses', () => ({
-  useBackupClassesList: () => backupClassesResponse,
+  useBackupClassesList: (_clusterName: string, provider?: string) =>
+    provider === undefined
+      ? backupClassesResponse
+      : (providerBackupClassesResponses.get(provider) ??
+        emptyBackupClassesResponse),
 }));
 vi.mock('components/editable-item/editable-item', () => ({
   default: () => null,
