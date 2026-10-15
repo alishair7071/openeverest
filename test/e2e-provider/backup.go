@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package main implements the in-repository provider used by core e2e tests.
 package main
 
 import (
@@ -24,6 +25,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -100,34 +102,9 @@ func (p *testProvider) SyncRestore(c *controller.Context, restore *backupv1alpha
 		return controller.RestoreExecutionStatus{}, err
 	}
 	if key == "" {
-		source := restore.Spec.DataSource.PointInTime
-		instanceName := restore.Spec.InstanceRef.Name
-		if source.Source.InstanceRef != nil {
-			instanceName = source.Source.InstanceRef.Name
-		}
-		prefix := fmt.Sprintf("%s/%s/%s/", providerName, restore.Namespace, instanceName)
-		objects := s3.NewListObjectsV2Paginator(s3Client, &s3.ListObjectsV2Input{
-			Bucket: aws.String(storage.Spec.S3.Bucket), Prefix: aws.String(prefix),
-		})
-		var latestTime time.Time
-		for objects.HasMorePages() {
-			page, listErr := objects.NextPage(c.Context())
-			if listErr != nil {
-				return controller.RestoreExecutionStatus{}, fmt.Errorf("list test backups: %w", listErr)
-			}
-			for _, object := range page.Contents {
-				if object.LastModified == nil {
-					continue
-				}
-				if source.RecoveryTarget == backupv1alpha1.RecoveryTargetDate &&
-					(source.Date == nil || object.LastModified.After(source.Date.Time)) {
-					continue
-				}
-				if key == "" || object.LastModified.After(latestTime) {
-					key = aws.ToString(object.Key)
-					latestTime = *object.LastModified
-				}
-			}
+		key, err = latestPITRBackupObjectKey(c, s3Client, storage.Spec.S3.Bucket, restore)
+		if err != nil {
+			return controller.RestoreExecutionStatus{}, err
 		}
 		if key == "" {
 			return controller.RestoreExecutionStatus{State: backupv1alpha1.RestoreStateFailed, Message: "no test backup at the requested point"}, nil
@@ -147,6 +124,52 @@ func (p *testProvider) SyncRestore(c *controller.Context, restore *backupv1alpha
 	return controller.RestoreExecutionStatus{
 		State: backupv1alpha1.RestoreStateSucceeded, StartedAt: &now, CompletedAt: &now,
 	}, nil
+}
+
+func latestPITRBackupObjectKey(
+	c *controller.Context,
+	s3Client *s3.Client,
+	bucket string,
+	restore *backupv1alpha1.Restore,
+) (string, error) {
+	source := restore.Spec.DataSource.PointInTime
+	instanceName := restore.Spec.InstanceRef.Name
+	if source.Source.InstanceRef != nil {
+		instanceName = source.Source.InstanceRef.Name
+	}
+	objects := s3.NewListObjectsV2Paginator(s3Client, &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
+		Prefix: aws.String(fmt.Sprintf("%s/%s/%s/", providerName, restore.Namespace, instanceName)),
+	})
+
+	var key string
+	var latestTime time.Time
+	for objects.HasMorePages() {
+		page, err := objects.NextPage(c.Context())
+		if err != nil {
+			return "", fmt.Errorf("list test backups: %w", err)
+		}
+		for _, object := range page.Contents {
+			if !isPITRBackupObjectCandidate(object, source, latestTime) {
+				continue
+			}
+			key = aws.ToString(object.Key)
+			latestTime = *object.LastModified
+		}
+	}
+	return key, nil
+}
+
+func isPITRBackupObjectCandidate(
+	object types.Object,
+	source *backupv1alpha1.DataSourcePointInTime,
+	latestTime time.Time,
+) bool {
+	if object.LastModified == nil || object.LastModified.Before(latestTime) {
+		return false
+	}
+	return source.RecoveryTarget != backupv1alpha1.RecoveryTargetDate ||
+		(source.Date != nil && !object.LastModified.After(source.Date.Time))
 }
 
 func (p *testProvider) CleanupBackup(c *controller.Context, backup *backupv1alpha1.Backup) (bool, error) {

@@ -33,8 +33,10 @@ const (
 	workloadImage     = "registry.k8s.io/pause:3.10"
 )
 
-var _ controller.ProviderInterface = (*testProvider)(nil)
-var _ controller.BackupProvider = (*testProvider)(nil)
+var (
+	_ controller.ProviderInterface = (*testProvider)(nil)
+	_ controller.BackupProvider    = (*testProvider)(nil)
+)
 
 type testProvider struct {
 	controller.BaseProvider
