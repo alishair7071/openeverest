@@ -16,10 +16,15 @@ import { useContext } from 'react';
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { beforeEach, vi } from 'vitest';
 import { DbWizardFormFields } from 'consts.ts';
 import { ScheduleFormDialogContext } from 'components/schedule-form-dialog/schedule-form-dialog-context/schedule-form-dialog.context';
 import type { BackupClass } from 'shared-types/backups.types';
 import { Schedules } from './schedules';
+
+const { mockUseBackupClassesList } = vi.hoisted(() => ({
+  mockUseBackupClassesList: vi.fn(),
+}));
 
 const backupClasses: BackupClass[] = [
   {
@@ -56,11 +61,7 @@ vi.mock('pages/database-form/hooks/use-database-page-mode', () => ({
   useDatabasePageMode: () => 'new',
 }));
 vi.mock('hooks/api/backup-classes/useBackupClasses', () => ({
-  useBackupClassesList: (_clusterName: string, provider?: string) =>
-    provider === undefined
-      ? backupClassesResponse
-      : (providerBackupClassesResponses.get(provider) ??
-        emptyBackupClassesResponse),
+  useBackupClassesList: mockUseBackupClassesList,
 }));
 vi.mock('components/editable-item/editable-item', () => ({
   default: () => null,
@@ -106,6 +107,16 @@ vi.mock('components/schedule-form-dialog', () => ({
   ScheduleFormDialog: () => <ScheduleDialogProbe />,
 }));
 
+beforeEach(() => {
+  mockUseBackupClassesList.mockImplementation(
+    (_clusterName: string, provider?: string) =>
+      provider === undefined
+        ? backupClassesResponse
+        : (providerBackupClassesResponses.get(provider) ??
+          emptyBackupClassesResponse)
+  );
+});
+
 const Harness = () => {
   const methods = useForm({
     defaultValues: {
@@ -115,10 +126,13 @@ const Harness = () => {
       backup: { classRef: { name: 'psmdb-class' }, schedules: [] },
     },
   });
-  const selectedClass = methods.watch('backup.classRef.name');
-
   return (
     <FormProvider {...methods}>
+      <input
+        data-testid="selected-class"
+        type="hidden"
+        {...methods.register('backup.classRef.name')}
+      />
       <button
         onClick={() => methods.setValue(DbWizardFormFields.provider, 'psmdb')}
       >
@@ -129,7 +143,6 @@ const Harness = () => {
       >
         Select unknown
       </button>
-      <div data-testid="selected-class">{selectedClass}</div>
       <Schedules backupStorages={[{ spec: { type: 's3' } }]} />
     </FormProvider>
   );
@@ -138,8 +151,10 @@ const Harness = () => {
 it('shows only provider-managed classes for the selected provider', async () => {
   render(<Harness />);
 
+  expect(mockUseBackupClassesList).toHaveBeenLastCalledWith('main', 'pxc');
+
   await waitFor(() =>
-    expect(screen.getByTestId('selected-class')).toHaveTextContent('pxc-class')
+    expect(screen.getByTestId('selected-class')).toHaveValue('pxc-class')
   );
   fireEvent.click(screen.getByTestId('create-schedule'));
   expect(screen.getByTestId('available-classes')).toHaveTextContent(
@@ -155,9 +170,7 @@ it('shows only provider-managed classes for the selected provider', async () => 
   fireEvent.click(screen.getByText('Close schedule'));
   fireEvent.click(screen.getByText('Select PSMDB'));
   await waitFor(() =>
-    expect(screen.getByTestId('selected-class')).toHaveTextContent(
-      'psmdb-class'
-    )
+    expect(screen.getByTestId('selected-class')).toHaveValue('psmdb-class')
   );
   fireEvent.click(screen.getByTestId('create-schedule'));
   expect(screen.getByTestId('available-classes')).toHaveTextContent(
@@ -170,7 +183,7 @@ it('shows only provider-managed classes for the selected provider', async () => 
   fireEvent.click(screen.getByText('Close schedule'));
   fireEvent.click(screen.getByText('Select unknown'));
   await waitFor(() =>
-    expect(screen.getByTestId('selected-class')).toBeEmptyDOMElement()
+    expect(screen.getByTestId('selected-class')).toHaveValue('')
   );
   expect(screen.getByTestId('create-schedule')).toBeDisabled();
 });
