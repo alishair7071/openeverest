@@ -22,9 +22,13 @@ import (
 )
 
 func TestNewManagerOptions(t *testing.T) {
+	t.Parallel()
+
 	scheme := runtime.NewScheme()
 
 	t.Run("leader election disabled by default", func(t *testing.T) {
+		t.Parallel()
+
 		options := newManagerOptions(scheme, "postgresql", reconcilerOptions{})
 
 		assert.False(t, options.LeaderElection)
@@ -33,6 +37,8 @@ func TestNewManagerOptions(t *testing.T) {
 	})
 
 	t.Run("leader election enabled", func(t *testing.T) {
+		t.Parallel()
+
 		options := &reconcilerOptions{}
 		WithLeaderElection()(options)
 
@@ -45,6 +51,8 @@ func TestNewManagerOptions(t *testing.T) {
 }
 
 func TestProviderLeaderElectionID(t *testing.T) {
+	t.Parallel()
+
 	postgresqlID := providerLeaderElectionID("postgresql")
 	mongodbID := providerLeaderElectionID("percona-server-mongodb")
 
