@@ -23,6 +23,8 @@ import (
 )
 
 func TestFilterBackupClassesByProvider(t *testing.T) {
+	t.Parallel()
+
 	classes := []backupv1alpha1.BackupClass{
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "pxc-provider"},
@@ -59,6 +61,8 @@ func TestFilterBackupClassesByProvider(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			input := classes
 			if tt.name == "empty input" {
 				input = nil

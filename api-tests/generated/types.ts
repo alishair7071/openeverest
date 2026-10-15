@@ -976,7 +976,7 @@ export interface components {
              * @default body
              * @enum {string}
              */
-            refresh_token_delivery?: "body" | "cookie";
+            refresh_token_delivery: "body" | "cookie";
         };
         /** @description OAuth 2.0-style token response (RFC 6749) */
         AuthTokenResponse: {
@@ -1019,9 +1019,9 @@ export interface components {
              */
             allowedNamespaces?: string[];
             /** @default true */
-            verifyTLS?: boolean;
+            verifyTLS: boolean;
             /** @default false */
-            forcePathStyle?: boolean;
+            forcePathStyle: boolean;
         };
         /** @description Backup storage parameters */
         UpdateBackupStorageParams: {
@@ -1114,9 +1114,9 @@ export interface components {
             url?: string;
             region?: string;
             /** @default true */
-            verifyTLS?: boolean;
+            verifyTLS: boolean;
             /** @default false */
-            forcePathStyle?: boolean;
+            forcePathStyle: boolean;
             /**
              * @deprecated
              * @description List of namespaces allowed to use this backup storage
@@ -2530,7 +2530,7 @@ export interface components {
                              *     The provider ultimately decides and validates supported service types.
                              * @default ClusterIP
                              */
-                            serviceType?: string;
+                            serviceType: string;
                         };
                         /**
                          * @description Storage requirements for this component.
@@ -2638,7 +2638,7 @@ export interface components {
                  * @default Cascade
                  * @enum {string}
                  */
-                deletionPolicy?: "Cascade" | "Orphan";
+                deletionPolicy: "Cascade" | "Orphan";
                 /**
                  * @description Maintenance governs how disruptive actions raised against this
                  *     Instance (e.g. the convergence step after a provider upgrade) are
@@ -2663,7 +2663,7 @@ export interface components {
                      * @default NonDisruptive
                      * @enum {string}
                      */
-                    autoApproveUpTo?: "NonDisruptive" | "RollingRestart" | "Downtime";
+                    autoApproveUpTo: "NonDisruptive" | "RollingRestart" | "Downtime";
                 };
                 /**
                  * @description Parameters contains structured parameters that apply to the Instance
@@ -4047,7 +4047,7 @@ export interface components {
                              *     The provider ultimately decides and validates supported service types.
                              * @default ClusterIP
                              */
-                            serviceType?: string;
+                            serviceType: string;
                         };
                         /**
                          * @description Storage requirements for this component.
@@ -4155,7 +4155,7 @@ export interface components {
                  * @default Cascade
                  * @enum {string}
                  */
-                deletionPolicy?: "Cascade" | "Orphan";
+                deletionPolicy: "Cascade" | "Orphan";
                 /**
                  * @description Maintenance governs how disruptive actions raised against this
                  *     Instance (e.g. the convergence step after a provider upgrade) are
@@ -4180,7 +4180,7 @@ export interface components {
                      * @default NonDisruptive
                      * @enum {string}
                      */
-                    autoApproveUpTo?: "NonDisruptive" | "RollingRestart" | "Downtime";
+                    autoApproveUpTo: "NonDisruptive" | "RollingRestart" | "Downtime";
                 };
                 /**
                  * @description Parameters contains structured parameters that apply to the Instance
@@ -4487,7 +4487,7 @@ export interface components {
                  * @default Delete
                  * @enum {string}
                  */
-                deletionPolicy?: "Retain" | "Delete";
+                deletionPolicy: "Retain" | "Delete";
                 /**
                  * @description Origin identifies where this Backup's data comes from: produced by a
                  *     live Instance, or imported from data already present in a BackupStorage.
@@ -5393,7 +5393,7 @@ export interface components {
                      *     instead of the host). Defaults to false.
                      * @default false
                      */
-                    forcePathStyle?: boolean;
+                    forcePathStyle: boolean;
                     /** @description Region is the region of the S3 bucket. */
                     region: string;
                     /** @description SecretAccessKey is a write-only convenience input. See AccessKeyID. */
@@ -5403,7 +5403,7 @@ export interface components {
                      *     Defaults to true.
                      * @default true
                      */
-                    verifyTLS?: boolean;
+                    verifyTLS: boolean;
                 };
                 /**
                  * @description Type is the object storage type. Today only "s3" is supported.
@@ -5469,7 +5469,7 @@ export interface components {
                      *     If unspecified, the default value is true.
                      * @default true
                      */
-                    verifyTLS?: boolean;
+                    verifyTLS: boolean;
                 };
                 /**
                  * @description Type is the name of monitoring tool (e.g., "pmm").
@@ -5483,12 +5483,12 @@ export interface components {
              *       "inUse": false
              *     }
              */
-            status?: {
+            status: {
                 /**
                  * @description InUse is a flag that indicates if any Instance uses the monitoring config.
                  * @default false
                  */
-                inUse?: boolean;
+                inUse: boolean;
                 /**
                  * Format: int64
                  * @description LastObservedGeneration is the most recent generation observed for this MonitoringConfig.

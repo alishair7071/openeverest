@@ -18,6 +18,7 @@ package k8s
 
 import (
 	"context"
+	"slices"
 
 	"k8s.io/apimachinery/pkg/types"
 
@@ -25,7 +26,7 @@ import (
 )
 
 // ListBackupClasses returns list of backup classes.
-func (h *k8sHandler) ListBackupClasses(ctx context.Context, cluster string, provider *string) (*backupv1alpha1.BackupClassList, error) {
+func (h *k8sHandler) ListBackupClasses(ctx context.Context, _ string, provider *string) (*backupv1alpha1.BackupClassList, error) {
 	list, err := h.kubeConnector.ListBackupClasses(ctx)
 	if err != nil || provider == nil {
 		return list, err
@@ -44,11 +45,8 @@ func filterBackupClassesByProvider(
 		if backupClass.Spec.ExecutionMode != backupv1alpha1.BackupExecutionModeProviderManaged {
 			continue
 		}
-		for _, supportedProvider := range backupClass.Spec.SupportedProviders {
-			if supportedProvider == provider {
-				filtered = append(filtered, backupClass)
-				break
-			}
+		if slices.Contains(backupClass.Spec.SupportedProviders, provider) {
+			filtered = append(filtered, backupClass)
 		}
 	}
 	return filtered
