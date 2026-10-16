@@ -6581,8 +6581,10 @@ export interface operations {
     listBackupClasses: {
         parameters: {
             query?: {
-                /** @description Filter to ProviderManaged backup classes supporting this provider. */
+                /** @description Filter backup classes supporting this provider. Classes without provider restrictions are included. */
                 provider?: string;
+                /** @description Filter backup classes by execution mode. */
+                executionMode?: "ProviderManaged" | "Job";
             };
             header?: never;
             path: {

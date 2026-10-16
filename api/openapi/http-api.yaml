@@ -1102,9 +1102,18 @@ paths:
         - name: provider
           in: query
           required: false
-          description: Filter to ProviderManaged backup classes supporting this provider.
+          description: Filter backup classes supporting this provider. Classes without provider restrictions are included.
           schema:
             type: string
+        - name: executionMode
+          in: query
+          required: false
+          description: Filter backup classes by execution mode.
+          schema:
+            type: string
+            enum:
+              - ProviderManaged
+              - Job
       responses:
         '200':
           description: List of backup classes

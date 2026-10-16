@@ -55,10 +55,11 @@ export const Schedules = ({ backupStorages }: Props) => {
   const dbWizardMode = useDatabasePageMode();
   const clusterName = useClusterName();
   const provider: string = watch(DbWizardFormFields.provider);
-  const { data: backupClasses = [] } = useBackupClassesList(
-    clusterName,
-    provider
-  );
+  const { data: backupClasses = [], isFetching: fetchingBackupClasses } =
+    useBackupClassesList(clusterName, {
+      provider,
+      executionMode: 'ProviderManaged',
+    });
 
   const [openScheduleModal, setOpenScheduleModal] = useState(false);
   const [mode, setMode] = useState<ScheduleWizardMode>(WizardMode.New);
@@ -78,10 +79,11 @@ export const Schedules = ({ backupStorages }: Props) => {
   );
 
   useEffect(() => {
+    if (fetchingBackupClasses) return;
     if (selectedClassName !== (backupClass?.metadata?.name ?? '')) {
       setValue(BACKUP_CLASS_REF_FIELD, backupClass?.metadata?.name ?? '');
     }
-  }, [backupClass, selectedClassName, setValue]);
+  }, [backupClass, fetchingBackupClasses, selectedClassName, setValue]);
 
   const createButtonDisabled =
     openScheduleModal ||

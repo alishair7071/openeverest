@@ -70,10 +70,11 @@ describe('backup class query keys', () => {
       'backup-classes',
       'main',
     ]);
-    expect(getFilteredBackupClassesQueryKey('main', 'pxc')).toEqual([
-      'backup-classes',
-      'main',
-      'pxc',
-    ]);
+    expect(
+      getFilteredBackupClassesQueryKey('main', {
+        provider: 'pxc',
+        executionMode: 'ProviderManaged',
+      })
+    ).toEqual(['backup-classes', 'main', 'filters', 'pxc', 'ProviderManaged']);
   });
 });

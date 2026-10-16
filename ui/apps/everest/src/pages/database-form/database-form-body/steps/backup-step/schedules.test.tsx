@@ -19,7 +19,10 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { beforeEach, vi } from 'vitest';
 import { DbWizardFormFields } from 'consts.ts';
 import { ScheduleFormDialogContext } from 'components/schedule-form-dialog/schedule-form-dialog-context/schedule-form-dialog.context';
-import type { BackupClass } from 'shared-types/backups.types';
+import type {
+  BackupClass,
+  BackupClassFilters,
+} from 'shared-types/backups.types';
 import { Schedules } from './schedules';
 
 const { mockUseBackupClassesList } = vi.hoisted(() => ({
@@ -46,13 +49,17 @@ const backupClasses: BackupClass[] = [
     spec: { executionMode: 'Job', supportedProviders: ['pxc'] },
   },
 ];
-const backupClassesResponse = { data: backupClasses, isSuccess: true };
 const providerBackupClassesResponses = new Map([
-  ['pxc', { data: [backupClasses[1]], isSuccess: true }],
-  ['psmdb', { data: [backupClasses[0]], isSuccess: true }],
-  ['unknown', { data: [], isSuccess: true }],
+  ['pxc', { data: [backupClasses[1]], isSuccess: true, isFetching: false }],
+  ['psmdb', { data: [backupClasses[0]], isSuccess: true, isFetching: false }],
+  ['unknown', { data: [], isSuccess: true, isFetching: false }],
 ]);
-const emptyBackupClassesResponse = { data: [], isSuccess: true };
+const emptyBackupClassesResponse = {
+  data: [],
+  isSuccess: true,
+  isFetching: false,
+};
+const fetchingBackupClassesResponse = { data: [], isFetching: true };
 
 vi.mock('hooks/api/useClusterName', () => ({
   useClusterName: () => 'main',
@@ -109,11 +116,9 @@ vi.mock('components/schedule-form-dialog', () => ({
 
 beforeEach(() => {
   mockUseBackupClassesList.mockImplementation(
-    (_clusterName: string, provider?: string) =>
-      provider === undefined
-        ? backupClassesResponse
-        : (providerBackupClassesResponses.get(provider) ??
-          emptyBackupClassesResponse)
+    (_clusterName: string, filters?: BackupClassFilters) =>
+      providerBackupClassesResponses.get(filters?.provider ?? '') ??
+      emptyBackupClassesResponse
   );
 });
 
@@ -151,7 +156,10 @@ const Harness = () => {
 it('shows only provider-managed classes for the selected provider', async () => {
   render(<Harness />);
 
-  expect(mockUseBackupClassesList).toHaveBeenLastCalledWith('main', 'pxc');
+  expect(mockUseBackupClassesList).toHaveBeenLastCalledWith('main', {
+    provider: 'pxc',
+    executionMode: 'ProviderManaged',
+  });
 
   await waitFor(() =>
     expect(screen.getByTestId('selected-class')).toHaveValue('pxc-class')
@@ -186,4 +194,12 @@ it('shows only provider-managed classes for the selected provider', async () => 
     expect(screen.getByTestId('selected-class')).toHaveValue('')
   );
   expect(screen.getByTestId('create-schedule')).toBeDisabled();
+});
+
+it('keeps the selected class while filtered classes are fetching', () => {
+  mockUseBackupClassesList.mockReturnValue(fetchingBackupClassesResponse);
+
+  render(<Harness />);
+
+  expect(screen.getByTestId('selected-class')).toHaveValue('psmdb-class');
 });

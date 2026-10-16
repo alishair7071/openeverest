@@ -26,28 +26,30 @@ import (
 )
 
 // ListBackupClasses returns list of backup classes.
-func (h *k8sHandler) ListBackupClasses(ctx context.Context, _ string, provider *string) (*backupv1alpha1.BackupClassList, error) {
+func (h *k8sHandler) ListBackupClasses(ctx context.Context, _ string, provider, executionMode *string) (*backupv1alpha1.BackupClassList, error) {
 	list, err := h.kubeConnector.ListBackupClasses(ctx)
-	if err != nil || provider == nil {
+	if err != nil || provider == nil && executionMode == nil {
 		return list, err
 	}
 
-	list.Items = filterBackupClassesByProvider(list.Items, *provider)
+	list.Items = filterBackupClasses(list.Items, provider, executionMode)
 	return list, nil
 }
 
-func filterBackupClassesByProvider(
+func filterBackupClasses(
 	backupClasses []backupv1alpha1.BackupClass,
-	provider string,
+	provider, executionMode *string,
 ) []backupv1alpha1.BackupClass {
 	filtered := make([]backupv1alpha1.BackupClass, 0, len(backupClasses))
 	for _, backupClass := range backupClasses {
-		if backupClass.Spec.ExecutionMode != backupv1alpha1.BackupExecutionModeProviderManaged {
+		if executionMode != nil && string(backupClass.Spec.ExecutionMode) != *executionMode {
 			continue
 		}
-		if slices.Contains(backupClass.Spec.SupportedProviders, provider) {
-			filtered = append(filtered, backupClass)
+		if provider != nil && len(backupClass.Spec.SupportedProviders) > 0 &&
+			!slices.Contains(backupClass.Spec.SupportedProviders, *provider) {
+			continue
 		}
+		filtered = append(filtered, backupClass)
 	}
 	return filtered
 }
