@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	backupv1alpha1 "github.com/openeverest/openeverest/v2/api/backup/v1alpha1"
+	"github.com/openeverest/openeverest/v2/internal/server/api"
 	"github.com/openeverest/openeverest/v2/pkg/kubernetes"
 )
 
@@ -64,39 +65,51 @@ func TestFilterBackupClasses(t *testing.T) {
 	}
 
 	tests := []struct {
-		name          string
-		input         []backupv1alpha1.BackupClass
-		provider      *string
-		executionMode *string
-		want          []string
+		name   string
+		input  []backupv1alpha1.BackupClass
+		params *api.ListBackupClassesParams
+		want   []string
 	}{
 		{
-			name:     "provider includes all execution modes and unrestricted classes",
-			input:    classes,
-			provider: new("pxc"),
-			want:     []string{"pxc-provider", "pxc-job", "unrestricted-job"},
+			name:  "provider includes all execution modes and unrestricted classes",
+			input: classes,
+			params: &api.ListBackupClassesParams{
+				Provider: new("pxc"),
+			},
+			want: []string{"pxc-provider", "pxc-job", "unrestricted-job"},
 		},
 		{
-			name:          "execution mode",
-			input:         classes,
-			executionMode: ptr.To(string(backupv1alpha1.BackupExecutionModeProviderManaged)),
-			want:          []string{"pxc-provider", "psmdb-provider"},
+			name:  "execution mode",
+			input: classes,
+			params: &api.ListBackupClassesParams{
+				ExecutionMode: ptr.To(api.ListBackupClassesParamsExecutionMode(backupv1alpha1.BackupExecutionModeProviderManaged)),
+			},
+			want: []string{"pxc-provider", "psmdb-provider"},
 		},
 		{
-			name:          "provider and execution mode",
-			input:         classes,
-			provider:      new("pxc"),
-			executionMode: ptr.To(string(backupv1alpha1.BackupExecutionModeProviderManaged)),
-			want:          []string{"pxc-provider"},
+			name:  "provider and execution mode",
+			input: classes,
+			params: &api.ListBackupClassesParams{
+				Provider:      new("pxc"),
+				ExecutionMode: ptr.To(api.ListBackupClassesParamsExecutionMode(backupv1alpha1.BackupExecutionModeProviderManaged)),
+			},
+			want: []string{"pxc-provider"},
 		},
-		{name: "empty input", input: nil, provider: new("pxc"), want: []string{}},
+		{
+			name:  "empty input",
+			input: nil,
+			params: &api.ListBackupClassesParams{
+				Provider: new("pxc"),
+			},
+			want: []string{},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			filtered := filterBackupClasses(tt.input, tt.provider, tt.executionMode)
+			filtered := filterBackupClasses(tt.input, tt.params)
 			if len(filtered) != len(tt.want) {
 				t.Fatalf("got %d classes, want %d", len(filtered), len(tt.want))
 			}
@@ -127,7 +140,7 @@ func TestListBackupClassesWithoutFilters(t *testing.T) {
 		log:           zap.NewNop().Sugar(),
 	}
 
-	list, err := handler.ListBackupClasses(context.Background(), "main", nil, nil)
+	list, err := handler.ListBackupClasses(context.Background(), "main", nil)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, backupClasses, list.Items)
 }

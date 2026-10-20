@@ -27,12 +27,7 @@ import (
 
 // ListBackupClasses lists all backup classes in the cluster.
 func (e *EverestServer) ListBackupClasses(c echo.Context, cluster string, params api.ListBackupClassesParams) error {
-	var executionMode *string
-	if params.ExecutionMode != nil {
-		value := string(*params.ExecutionMode)
-		executionMode = &value
-	}
-	result, err := e.handler.ListBackupClasses(c.Request().Context(), cluster, params.Provider, executionMode)
+	result, err := e.handler.ListBackupClasses(c.Request().Context(), cluster, &params)
 	if err != nil {
 		e.l.Errorf("ListBackupClasses failed: %v", err)
 		return err
